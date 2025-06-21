@@ -307,6 +307,21 @@
         <div style="text-align:center; margin-bottom:1em; color:#888; font-size:1.1em;">
             <em>{{ about }}</em>
         </div>
+        <form method="POST" style="margin-bottom:2em; background:#f8fbff; border-radius:8px; padding:1em 1em 0.5em 1em;">
+            <h2 style="margin-top:0;">Custom Password Policy</h2>
+            <label>Minimum Length:
+                <input type="number" name="policy_min_length" min="8" max="64" value="{{ policy.min_length }}">
+            </label>
+            <div class="options">
+                <label><input type="checkbox" name="policy_upper" {% if policy.upper %}checked{% endif %}> Require Uppercase</label>
+                <label><input type="checkbox" name="policy_lower" {% if policy.lower %}checked{% endif %}> Require Lowercase</label>
+                <label><input type="checkbox" name="policy_digits" {% if policy.digits %}checked{% endif %}> Require Digits</label>
+                <label><input type="checkbox" name="policy_special" {% if policy.special %}checked{% endif %}> Require Special</label>
+                <label><input type="checkbox" name="policy_exclude_similar" {% if policy.exclude_similar %}checked{% endif %}> Exclude Similar (l/I/1/O/0)</label>
+            </div>
+            <button class="btn" type="submit" name="set_policy">Save Policy</button>
+            <span style="color:#888; font-size:0.98em; margin-left:1em;">(Used for generation & analysis)</span>
+        </form>
         <form method="POST">
             <h2>Generate a Password</h2>
             <label>Length:

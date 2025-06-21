@@ -155,14 +155,45 @@ def index():
     rotation_days = DEFAULT_ROTATION_DAYS
     last_generated = session.get('last_generated', None)
     next_rotation = None
+    # Custom policy defaults
+    policy = session.get('policy', {
+        'min_length': MIN_LENGTH,
+        'upper': True,
+        'lower': True,
+        'digits': True,
+        'special': True,
+        'exclude_similar': False
+    })
     if request.method == 'POST':
+        if 'set_policy' in request.form:
+            policy['min_length'] = int(request.form.get('policy_min_length', MIN_LENGTH))
+            policy['upper'] = 'policy_upper' in request.form
+            policy['lower'] = 'policy_lower' in request.form
+            policy['digits'] = 'policy_digits' in request.form
+            policy['special'] = 'policy_special' in request.form
+            policy['exclude_similar'] = 'policy_exclude_similar' in request.form
+            session['policy'] = policy
         if 'generate' in request.form:
-            length = int(request.form.get('length', 16))
-            use_upper = 'upper' in request.form
-            use_lower = 'lower' in request.form
-            use_digits = 'digits' in request.form
-            use_special = 'special' in request.form
-            password = generate_password(length, use_upper, use_lower, use_digits, use_special)
+            length = int(request.form.get('length', policy['min_length']))
+            use_upper = 'upper' in request.form if 'upper' in request.form else policy['upper']
+            use_lower = 'lower' in request.form if 'lower' in request.form else policy['lower']
+            use_digits = 'digits' in request.form if 'digits' in request.form else policy['digits']
+            use_special = 'special' in request.form if 'special' in request.form else policy['special']
+            chars = ''
+            if use_upper:
+                chars += string.ascii_uppercase
+            if use_lower:
+                chars += string.ascii_lowercase
+            if use_digits:
+                chars += string.digits
+            if use_special:
+                chars += SPECIAL_CHARS
+            if policy['exclude_similar']:
+                for c in 'lI1O0':
+                    chars = chars.replace(c, '')
+            if not chars:
+                chars = string.ascii_letters
+            password = ''.join(secrets.choice(chars) for _ in range(length))
             if 'shuffle' in request.form:
                 password = ''.join(secrets.choice(password) for _ in range(len(password)))
             analysis = analyze_password(password)
@@ -170,7 +201,6 @@ def index():
             strength = password_strength_score(password)
             history.append(password)
             session['history'] = history[-5:]
-            # Set last generated date
             last_generated = datetime.now().strftime('%Y-%m-%d')
             session['last_generated'] = last_generated
         elif 'analyze' in request.form:
@@ -188,7 +218,7 @@ def index():
     if last_generated:
         last_dt = datetime.strptime(last_generated, '%Y-%m-%d')
         next_rotation = (last_dt + timedelta(days=rotation_days)).strftime('%Y-%m-%d')
-    return render_template('index.html', password=password, analysis=analysis, custom=custom, suggestions=suggestions, variations=variations, strength=strength, history=history[-5:], show_pronounceable=show_pronounceable, pronounceable=pronounceable, dark_mode=dark_mode, app_name=app_name, about=about, last_generated=last_generated, next_rotation=next_rotation, rotation_days=rotation_days)
+    return render_template('index.html', password=password, analysis=analysis, custom=custom, suggestions=suggestions, variations=variations, strength=strength, history=history[-5:], show_pronounceable=show_pronounceable, pronounceable=pronounceable, dark_mode=dark_mode, app_name=app_name, about=about, last_generated=last_generated, next_rotation=next_rotation, rotation_days=rotation_days, policy=policy)
 
 
 if __name__ == '__main__':
