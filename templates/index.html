@@ -371,6 +371,23 @@
         <div class="strength-label">
             {% if strength == 1 %}Very Weak{% elif strength == 2 %}Weak{% elif strength == 3 %}Moderate{% elif strength == 4 %}Strong{% elif strength == 5 %}Very Strong{% endif %}
         </div>
+        {% if entropy is not none and crack_time is not none %}
+        <div class="entropy-info" style="margin-top:0.7em; background:#e6f7ff; color:#0078d7; border-radius:6px; padding:0.7em 1em;">
+            <strong>Estimated Entropy:</strong> {{ entropy }} bits<br>
+            <strong>Estimated Crack Time (offline, 10<sup>10</sup> guesses/sec):</strong>
+            {% if crack_time < 60 %}
+                {{ crack_time|round(2) }} seconds
+            {% elif crack_time < 3600 %}
+                {{ (crack_time/60)|round(2) }} minutes
+            {% elif crack_time < 86400 %}
+                {{ (crack_time/3600)|round(2) }} hours
+            {% elif crack_time < 31536000 %}
+                {{ (crack_time/86400)|round(2) }} days
+            {% else %}
+                {{ (crack_time/31536000)|round(2) }} years
+            {% endif %}
+        </div>
+        {% endif %}
         <div class="rotation-reminder" style="margin-top:1em; background:#fffbe6; color:#b38f00; border-radius:6px; padding:0.7em 1em;">
             <strong>Password Rotation Reminder:</strong><br>
             {% if last_generated and next_rotation %}

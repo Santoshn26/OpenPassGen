@@ -4,6 +4,7 @@ import io
 import secrets
 import string
 from datetime import datetime, timedelta
+import math
 
 app = Flask(__name__)
 # PWA(app)
@@ -80,7 +81,6 @@ def generate_variations(password, count=3):
 
 
 # Helper for password strength score
-import math
 
 def password_strength_score(password):
     score = 0
@@ -138,6 +138,28 @@ def toggle_dark():
     resp.set_cookie('dark_mode', '0' if dark_mode else '1', max_age=60*60*24*365)
     return resp
 
+def estimate_entropy(password, policy):
+    charset = 0
+    if policy.get('upper', True):
+        charset += 26
+    if policy.get('lower', True):
+        charset += 26
+    if policy.get('digits', True):
+        charset += 10
+    if policy.get('special', True):
+        charset += len(SPECIAL_CHARS)
+    if policy.get('exclude_similar', False):
+        for c in 'lI1O0':
+            if c in string.ascii_letters + string.digits:
+                charset -= 1
+    # Avoid negative/zero charset
+    charset = max(charset, 1)
+    entropy = len(password) * math.log2(charset)
+    # Crack time: guesses per second (1e10 for offline, 1e6 for online)
+    guesses = charset ** len(password)
+    crack_time_seconds = guesses / 1e10
+    return round(entropy, 2), crack_time_seconds
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     password = ''
@@ -155,6 +177,8 @@ def index():
     rotation_days = DEFAULT_ROTATION_DAYS
     last_generated = session.get('last_generated', None)
     next_rotation = None
+    entropy = None
+    crack_time = None
     # Custom policy defaults
     policy = session.get('policy', {
         'min_length': MIN_LENGTH,
@@ -203,6 +227,7 @@ def index():
             session['history'] = history[-5:]
             last_generated = datetime.now().strftime('%Y-%m-%d')
             session['last_generated'] = last_generated
+            entropy, crack_time = estimate_entropy(password, policy)
         elif 'analyze' in request.form:
             custom = request.form.get('custom_password', '')
             analysis = analyze_password(custom)
@@ -211,6 +236,7 @@ def index():
             strength = password_strength_score(custom)
             if custom:
                 variations = generate_variations(custom)
+                entropy, crack_time = estimate_entropy(custom, policy)
         elif 'pronounceable' in request.form:
             show_pronounceable = True
             pronounceable = generate_pronounceable()
@@ -218,7 +244,7 @@ def index():
     if last_generated:
         last_dt = datetime.strptime(last_generated, '%Y-%m-%d')
         next_rotation = (last_dt + timedelta(days=rotation_days)).strftime('%Y-%m-%d')
-    return render_template('index.html', password=password, analysis=analysis, custom=custom, suggestions=suggestions, variations=variations, strength=strength, history=history[-5:], show_pronounceable=show_pronounceable, pronounceable=pronounceable, dark_mode=dark_mode, app_name=app_name, about=about, last_generated=last_generated, next_rotation=next_rotation, rotation_days=rotation_days, policy=policy)
+    return render_template('index.html', password=password, analysis=analysis, custom=custom, suggestions=suggestions, variations=variations, strength=strength, history=history[-5:], show_pronounceable=show_pronounceable, pronounceable=pronounceable, dark_mode=dark_mode, app_name=app_name, about=about, last_generated=last_generated, next_rotation=next_rotation, rotation_days=rotation_days, policy=policy, entropy=entropy, crack_time=crack_time)
 
 
 if __name__ == '__main__':
