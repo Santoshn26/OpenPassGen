@@ -50,6 +50,34 @@ OpenPassGen is a modern, open-source, privacy-first password generator and analy
 5. **Open your browser:**
    Go to [http://localhost:5000](http://localhost:5000)
 
+## Running OpenPassGen in a Container
+
+You can run OpenPassGen using Docker for easy deployment and isolation.
+
+### Build and Run with Docker
+
+1. **Build the Docker image:**
+   ```sh
+   docker build -t openpassgen .
+   ```
+2. **Run the container:**
+   ```sh
+   docker run -d -p 5000:5000 --name openpassgen openpassgen
+   ```
+
+### Using Docker Compose
+
+1. **Start the app with Docker Compose:**
+   ```sh
+   docker-compose up --build
+   ```
+2. **Stop the app:**
+   ```sh
+   docker-compose down
+   ```
+
+The app will be available at [http://localhost:5000](http://localhost:5000) or your host IP.
+
 ## Usage
 - Use the generator to create strong passwords with your chosen options.
 - Analyze your own password and get actionable suggestions.
