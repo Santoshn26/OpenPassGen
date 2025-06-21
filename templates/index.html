@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Generator</title>
+    <!-- Remove manifest and service worker registration for now -->
+    <!-- <link rel="manifest" href="/static/manifest.json"> -->
+    <!-- <meta name="theme-color" content="#0078d7"> -->
+    <!-- <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/static/service-worker.js');
+        });
+      }
+    </script> -->
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(120deg, #e0eafc, #cfdef3);
+            margin: 0; padding: 0;
+            transition: background 0.3s;
+        }
+        body.dark {
+            background: linear-gradient(120deg, #232526, #414345);
+            color: #f4f4f4;
+        }
+        .container {
+            max-width: 520px;
+            margin: 40px auto;
+            background: #fff;
+            padding: 2.5em 2em 2em 2em;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px #b3c6e0;
+            position: relative;
+            transition: background 0.3s, color 0.3s;
+        }
+        body.dark .container {
+            background: #232526;
+            color: #f4f4f4;
+            box-shadow: 0 4px 24px #111;
+        }
+        h1 {
+            text-align: center;
+            color: #0078d7;
+            margin-bottom: 0.5em;
+        }
+        body.dark h1 { color: #7ecfff; }
+        h2 {
+            color: #333;
+            margin-top: 1.5em;
+        }
+        body.dark h2 { color: #b3e0ff; }
+        label {
+            display: block;
+            margin-top: 1em;
+            color: #444;
+        }
+        body.dark label { color: #e0eafc; }
+        input[type="text"], input[type="password"], input[type="number"] {
+            width: 100%;
+            padding: 0.7em;
+            margin-top: 0.5em;
+            border: 1px solid #b3c6e0;
+            border-radius: 6px;
+            font-size: 1em;
+            background: #f8fbff;
+            transition: border 0.2s, background 0.3s;
+        }
+        body.dark input[type="text"], body.dark input[type="password"], body.dark input[type="number"] {
+            background: #232526;
+            color: #f4f4f4;
+            border: 1px solid #7ecfff;
+        }
+        input[type="text"]:focus, input[type="password"]:focus, input[type="number"]:focus {
+            border: 1.5px solid #0078d7;
+            outline: none;
+        }
+        .options {
+            margin: 1em 0;
+        }
+        .options label {
+            display: inline-block;
+            margin-right: 1em;
+            font-size: 0.98em;
+        }
+        .btn {
+            background: linear-gradient(90deg, #0078d7 60%, #005fa3 100%);
+            color: #fff;
+            border: none;
+            padding: 0.8em 1.7em;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 1em;
+            font-size: 1.05em;
+            font-weight: 500;
+            box-shadow: 0 2px 8px #b3c6e0;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background: linear-gradient(90deg, #005fa3 60%, #0078d7 100%);
+        }
+        .toggle-btn {
+            background: #232526;
+            color: #fff;
+            border: none;
+            padding: 0.5em 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-left: 0.5em;
+            margin-bottom: 1em;
+        }
+        .toggle-btn:hover { background: #0078d7; }
+        .result {
+            margin-top: 1.5em;
+            background: #e6f7ff;
+            padding: 1.2em 1em 1em 1em;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+            flex-wrap: wrap;
+        }
+        body.dark .result { background: #232526; border: 1px solid #7ecfff; }
+        .result input[type="text"], .result input[type="password"] {
+            background: #f4faff;
+            border: 1px solid #b3c6e0;
+            font-size: 1.1em;
+            flex: 1 1 200px;
+            min-width: 180px;
+            max-width: 100%;
+            resize: horizontal;
+        }
+        .result .show-btn,
+        .result .copy-btn,
+        .result .download-btn {
+            flex: 0 0 auto;
+            margin-left: 0;
+        }
+        .result form {
+            display: inline;
+        }
+        .copy-btn {
+            background: #00b386;
+            color: #fff;
+            border: none;
+            padding: 0.5em 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-left: 0.5em;
+            transition: background 0.2s;
+        }
+        .copy-btn:hover {
+            background: #008060;
+        }
+        .download-btn {
+            background: #ffb300;
+            color: #232526;
+            border: none;
+            padding: 0.5em 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-left: 0.5em;
+            transition: background 0.2s;
+        }
+        .download-btn:hover { background: #ff8800; color: #fff; }
+        .show-btn {
+            background: #0078d7;
+            color: #fff;
+            border: none;
+            padding: 0.5em 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-left: 0.5em;
+            transition: background 0.2s;
+        }
+        .show-btn:hover { background: #005fa3; }
+        .strength-meter {
+            margin-top: 1em;
+            height: 16px;
+            width: 100%;
+            background: #e0eafc;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 4px #b3c6e0;
+        }
+        .strength-bar {
+            height: 100%;
+            transition: width 0.4s;
+        }
+        .strength-1 { width: 20%; background: #d8000c; }
+        .strength-2 { width: 40%; background: #ffb300; }
+        .strength-3 { width: 60%; background: #ffd700; }
+        .strength-4 { width: 80%; background: #7ecfff; }
+        .strength-5 { width: 100%; background: #00b386; }
+        .strength-label {
+            margin-top: 0.3em;
+            font-size: 0.98em;
+            text-align: right;
+            color: #0078d7;
+        }
+        body.dark .strength-label { color: #7ecfff; }
+        .issues {
+            color: #d8000c;
+            margin-top: 1em;
+            background: #fff3f3;
+            border-radius: 6px;
+            padding: 0.7em 1em;
+        }
+        body.dark .issues { background: #3a2323; color: #ffb3b3; }
+        .suggestions {
+            color: #0078d7;
+            margin-top: 1em;
+            background: #f0f8ff;
+            border-radius: 6px;
+            padding: 0.7em 1em;
+        }
+        body.dark .suggestions { background: #1a2326; color: #7ecfff; }
+        .variations {
+            margin-top: 1.5em;
+            background: #f8fbff;
+            border-radius: 6px;
+            padding: 1em 1em 0.5em 1em;
+        }
+        body.dark .variations { background: #232526; }
+        .variation-item {
+            background: #e6f7ff;
+            border-radius: 4px;
+            padding: 0.5em 0.7em;
+            margin-bottom: 0.5em;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        body.dark .variation-item { background: #232526; }
+        .variation-item input[type="text"] {
+            width: 80%;
+            background: #f4faff;
+            border: 1px solid #b3c6e0;
+            font-size: 1em;
+        }
+        body.dark .variation-item input[type="text"] {
+            background: #232526; color: #f4f4f4; border: 1px solid #7ecfff; }
+        .reflection {
+            text-align: center;
+            margin-top: 2em;
+            color: #888;
+            font-size: 1.1em;
+        }
+        body.dark .reflection { color: #b3e0ff; }
+        .history {
+            margin-top: 1.5em;
+            background: #e0eafc;
+            border-radius: 6px;
+            padding: 1em 1em 0.5em 1em;
+        }
+        body.dark .history { background: #232526; color: #7ecfff; }
+        .pronounceable {
+            margin-top: 1.5em;
+            background: #f0f8ff;
+            border-radius: 6px;
+            padding: 1em 1em 0.5em 1em;
+        }
+        body.dark .pronounceable { background: #1a2326; color: #7ecfff; }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 140px;
+            background-color: #232526;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 0;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -70px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        @media (max-width: 600px) {
+            .container { max-width: 98vw; padding: 1em; }
+            .result { flex-direction: column; align-items: stretch; }
+            .result input[type="text"], .result input[type="password"] { width: 100%; min-width: 0; }
+            .result .show-btn, .result .copy-btn, .result .download-btn { width: 100%; margin-top: 0.5em; }
+        }
+    </style>
+</head>
+<body{% if dark_mode %} class="dark"{% endif %}>
+    <div class="container">
+        <form method="POST" action="/toggle_dark" style="text-align:right; margin-bottom:0;">
+            <button class="toggle-btn" type="submit">{{ 'Light Mode' if dark_mode else 'Dark Mode' }}</button>
+        </form>
+        <h1>{{ app_name }}</h1>
+        <div style="text-align:center; margin-bottom:1em; color:#888; font-size:1.1em;">
+            <em>{{ about }}</em>
+        </div>
+        <form method="POST">
+            <h2>Generate a Password</h2>
+            <label>Length:
+                <input type="number" name="length" min="8" max="64" value="16">
+            </label>
+            <div class="options">
+                <label><input type="checkbox" name="upper" checked> Uppercase</label>
+                <label><input type="checkbox" name="lower" checked> Lowercase</label>
+                <label><input type="checkbox" name="digits" checked> Digits</label>
+                <label><input type="checkbox" name="special" checked> Special</label>
+            </div>
+            <label><input type="checkbox" name="shuffle"> Shuffle password</label>
+            <button class="btn" type="submit" name="generate">Generate</button>
+            <button class="btn" type="submit" name="pronounceable">Pronounceable</button>
+        </form>
+        {% if show_pronounceable %}
+        <div class="pronounceable">
+            <strong>Pronounceable Password:</strong>
+            <input type="text" id="pronounceable-password" value="{{ pronounceable }}" readonly>
+            <button class="copy-btn" onclick="copyToClipboard('pronounceable-password')">Copy</button>
+        </div>
+        {% endif %}
+        <form method="POST" style="margin-top:2em;">
+            <h2>Analyze or Modify Your Password</h2>
+            <label>Enter your password:
+                <input type="text" name="custom_password" id="custom-password" value="{{ custom }}">
+            </label>
+            <button class="btn" type="submit" name="analyze">Analyze</button>
+        </form>
+        {% if password %}
+        <div class="result">
+            <strong>Password:</strong>
+            <input type="{{ 'text' if show_password else 'password' }}" id="main-password" value="{{ password }}" readonly style="min-width:180px; max-width:100%; resize:horizontal;">
+            <button class="show-btn" type="button" onclick="togglePassword('main-password', this)"><span id="eye-icon">👁️</span></button>
+            <button class="copy-btn" onclick="copyToClipboard('main-password')">Copy</button>
+            <form method="POST" action="/download" style="display:inline;">
+                <input type="hidden" name="download_password" value="{{ password }}">
+                <button class="download-btn" type="submit">Download</button>
+            </form>
+        </div>
+        <div class="strength-meter">
+            <div class="strength-bar strength-{{ strength }}"></div>
+        </div>
+        <div class="strength-label">
+            {% if strength == 1 %}Very Weak{% elif strength == 2 %}Weak{% elif strength == 3 %}Moderate{% elif strength == 4 %}Strong{% elif strength == 5 %}Very Strong{% endif %}
+        </div>
+        <div class="rotation-reminder" style="margin-top:1em; background:#fffbe6; color:#b38f00; border-radius:6px; padding:0.7em 1em;">
+            <strong>Password Rotation Reminder:</strong><br>
+            {% if last_generated and next_rotation %}
+                Last generated: <b>{{ last_generated }}</b><br>
+                Recommended to change after <b>{{ rotation_days }}</b> days: <b>{{ next_rotation }}</b><br>
+                <span style="font-size:0.95em;">(Best practice: rotate passwords every {{ rotation_days }} days.)</span>
+            {% else %}
+                <span style="font-size:0.95em;">Best practice: rotate passwords every {{ rotation_days }} days.</span>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% if analysis %}
+        <div class="issues">
+            <ul>
+            {% for issue in analysis %}
+                <li>{{ issue }}</li>
+            {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        {% if suggestions %}
+        <div class="suggestions">
+            <strong>Suggestions to enhance complexity:</strong>
+            <ul>
+            {% for s in suggestions %}
+                <li>{{ s }}</li>
+            {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        {% if variations %}
+        <div class="variations">
+            <strong>Variations of your password:</strong>
+            {% for v in variations %}
+            <div class="variation-item">
+                <input type="text" id="variation-{{ loop.index }}" value="{{ v }}" readonly>
+                <button class="copy-btn" onclick="copyToClipboard('variation-{{ loop.index }}')">Copy</button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% if history %}
+        <div class="history">
+            <strong>Recent Passwords:</strong>
+            <ul>
+            {% for h in history %}
+                <li><input type="text" value="{{ h }}" readonly style="width:80%;"> <button class="copy-btn" onclick="copyToClipboardFromValue(this)">Copy</button></li>
+            {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        <div class="reflection">
+            <em>Strong passwords are your first line of defense. Make them unique, long, and hard to guess!<br>
+            <span style="color:#0078d7;">OpenPassGen is open source. <a href="https://github.com/yourusername/OpenPassGen" target="_blank" style="color:#0078d7; text-decoration:underline;">View on GitHub</a></span></em>
+        </div>
+    </div>
+    <script>
+        function copyToClipboard(elementId) {
+            var copyText = document.getElementById(elementId);
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            document.execCommand("copy");
+            copyText.style.background = '#d4f7e6';
+            setTimeout(function() { copyText.style.background = '#f4faff'; }, 600);
+        }
+        function copyToClipboardFromValue(btn) {
+            var input = btn.parentElement.querySelector('input');
+            input.select();
+            input.setSelectionRange(0, 99999);
+            document.execCommand("copy");
+            input.style.background = '#d4f7e6';
+            setTimeout(function() { input.style.background = '#f4faff'; }, 600);
+        }
+        function togglePassword(id, btn) {
+            var input = document.getElementById(id);
+            if (input.type === "password") {
+                input.type = "text";
+                btn.innerHTML = '<span id="eye-icon">🙈</span>';
+            } else {
+                input.type = "password";
+                btn.innerHTML = '<span id="eye-icon">👁️</span>';
+            }
+        }
+        // Set dark mode on load
+        window.onload = function() {
+            // No need to set dark mode here, server sets class
+        };
+    </script>
+</body>
+</html>
