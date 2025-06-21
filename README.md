@@ -17,6 +17,10 @@ OpenPassGen is a modern, open-source, privacy-first password generator and analy
 - **Responsive UI**: Works great on desktop and mobile.
 - **Open Source**: MIT licensed, ready for contributions!
 
+## Logo
+
+![OpenPassGen Logo](logo.png)
+
 ## Screenshots
 
 ![OpenPassGen Screenshot](screenshot.png) <!-- Add your screenshot here -->
