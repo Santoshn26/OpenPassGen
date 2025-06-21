@@ -18,6 +18,8 @@
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             background: linear-gradient(120deg, #e0eafc, #cfdef3);
+            min-height: 100vh;
+            min-width: 100vw;
             margin: 0; padding: 0;
             transition: background 0.3s;
         }
@@ -26,19 +28,20 @@
             color: #f4f4f4;
         }
         .container {
-            max-width: 520px;
+            max-width: 1400px;
+            width: 95vw;
             margin: 40px auto;
-            background: #fff;
+            background: rgba(255,255,255,0.98);
             padding: 2.5em 2em 2em 2em;
-            border-radius: 16px;
-            box-shadow: 0 4px 24px #b3c6e0;
+            border-radius: 24px;
+            box-shadow: 0 4px 32px #b3c6e0;
             position: relative;
             transition: background 0.3s, color 0.3s;
         }
         body.dark .container {
-            background: #232526;
+            background: rgba(35,37,38,0.98);
             color: #f4f4f4;
-            box-shadow: 0 4px 24px #111;
+            box-shadow: 0 4px 32px #111;
         }
         h1 {
             text-align: center;
@@ -95,10 +98,27 @@
             font-size: 1.05em;
             font-weight: 500;
             box-shadow: 0 2px 8px #b3c6e0;
-            transition: background 0.2s;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.15s;
         }
-        .btn:hover {
-            background: linear-gradient(90deg, #005fa3 60%, #0078d7 100%);
+        .btn.generate-main {
+            background: linear-gradient(90deg, #ff9800 60%, #ff5722 100%);
+            color: #fff;
+            font-size: 1.18em;
+            font-weight: 700;
+            box-shadow: 0 4px 16px #ffb30099, 0 2px 8px #b3c6e0;
+            border: 2px solid #ff9800;
+            text-shadow: 0 1px 2px #b36b00cc;
+            animation: pulse 1.5s infinite;
+        }
+        .btn.generate-main:hover, .btn.generate-main:focus {
+            background: linear-gradient(90deg, #ff5722 60%, #ff9800 100%);
+            transform: scale(1.06);
+            box-shadow: 0 6px 24px #ff980099, 0 2px 8px #b3c6e0;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 4px 16px #ffb30099, 0 2px 8px #b3c6e0; }
+            50% { box-shadow: 0 8px 32px #ff980099, 0 2px 8px #b3c6e0; }
+            100% { box-shadow: 0 4px 16px #ffb30099, 0 2px 8px #b3c6e0; }
         }
         .toggle-btn {
             background: #232526;
@@ -291,10 +311,34 @@
             opacity: 1;
         }
         @media (max-width: 600px) {
-            .container { max-width: 98vw; padding: 1em; }
-            .result { flex-direction: column; align-items: stretch; }
-            .result input[type="text"], .result input[type="password"] { width: 100%; min-width: 0; }
-            .result .show-btn, .result .copy-btn, .result .download-btn { width: 100%; margin-top: 0.5em; }
+            .container { max-width: 100vw; padding: 1em; border-radius: 0; }
+            .main-flex { flex-direction: column; gap: 0; }
+        }
+        .main-flex {
+            display: flex;
+            flex-direction: row;
+            gap: 3em;
+            justify-content: space-between;
+            align-items: flex-start;
+            width: 100%;
+        }
+        .main-left, .main-right {
+            flex: 1 1 0;
+            min-width: 380px;
+            max-width: 48%;
+        }
+        @media (max-width: 1200px) {
+            .container { max-width: 98vw; }
+            .main-left, .main-right { min-width: 0; max-width: 100%; }
+        }
+        @media (max-width: 900px) {
+            .main-flex {
+                flex-direction: column;
+                gap: 0;
+            }
+            .main-left, .main-right {
+                min-width: 0; max-width: 100%;
+            }
         }
     </style>
 </head>
@@ -307,158 +351,173 @@
         <div style="text-align:center; margin-bottom:1em; color:#888; font-size:1.1em;">
             <em>{{ about }}</em>
         </div>
-        <form method="POST" style="margin-bottom:2em; background:#f8fbff; border-radius:8px; padding:1em 1em 0.5em 1em;">
-            <h2 style="margin-top:0;">Custom Password Policy</h2>
-            <label>Minimum Length:
-                <input type="number" name="policy_min_length" min="8" max="64" value="{{ policy.min_length }}">
-            </label>
-            <div class="options">
-                <label><input type="checkbox" name="policy_upper" {% if policy.upper %}checked{% endif %}> Require Uppercase</label>
-                <label><input type="checkbox" name="policy_lower" {% if policy.lower %}checked{% endif %}> Require Lowercase</label>
-                <label><input type="checkbox" name="policy_digits" {% if policy.digits %}checked{% endif %}> Require Digits</label>
-                <label><input type="checkbox" name="policy_special" {% if policy.special %}checked{% endif %}> Require Special</label>
-                <label><input type="checkbox" name="policy_exclude_similar" {% if policy.exclude_similar %}checked{% endif %}> Exclude Similar (l/I/1/O/0)</label>
+        <!-- LANDSCAPE LAYOUT FOR DESKTOP -->
+        <div class="main-flex">
+            <div class="main-left">
+                <!-- Generated Password Section (TOP PRIORITY) -->
+                {% if password %}
+                <div class="result">
+                    <strong>Password:</strong>
+                    <input type="{{ 'text' if show_password else 'password' }}" id="main-password" value="{{ password }}" readonly style="min-width:180px; max-width:100%; resize:horizontal;">
+                    <button class="show-btn" type="button" onclick="togglePassword('main-password', this)"><span id="eye-icon">👁️</span></button>
+                    <button class="copy-btn" onclick="copyToClipboard('main-password')">Copy</button>
+                    <form method="POST" action="/download" style="display:inline;">
+                        <input type="hidden" name="download_password" value="{{ password }}">
+                        <button class="download-btn" type="submit">Download</button>
+                    </form>
+                </div>
+                <div class="strength-meter">
+                    <div class="strength-bar strength-{{ strength }}"></div>
+                </div>
+                <div class="strength-label">
+                    {% if strength == 1 %}Very Weak{% elif strength == 2 %}Weak{% elif strength == 3 %}Moderate{% elif strength == 4 %}Strong{% elif strength == 5 %}Very Strong{% endif %}
+                </div>
+                {% endif %}
+                <!-- Generator Form -->
+                <form method="POST">
+                    <h2>Generate a Password</h2>
+                    <label>Length:
+                        <input type="number" name="length" min="8" max="64" value="16">
+                    </label>
+                    <div class="options">
+                        <label><input type="checkbox" name="upper" checked> Uppercase</label>
+                        <label><input type="checkbox" name="lower" checked> Lowercase</label>
+                        <label><input type="checkbox" name="digits" checked> Digits</label>
+                        <label><input type="checkbox" name="special" checked> Special</label>
+                    </div>
+                    <label><input type="checkbox" name="shuffle"> Shuffle password</label>
+                    <button class="btn generate-main" type="submit" name="generate">&#9889; Generate</button>
+                    <button class="btn" type="submit" name="pronounceable">Pronounceable</button>
+                </form>
+                <form method="POST" style="margin-bottom:2em; background:#f8fbff; border-radius:8px; padding:1em 1em 0.5em 1em;">
+                    <h2 style="margin-top:0;">Custom Password Policy</h2>
+                    <label>Minimum Length:
+                        <input type="number" name="policy_min_length" min="8" max="64" value="{{ policy.min_length }}">
+                    </label>
+                    <div class="options">
+                        <label><input type="checkbox" name="policy_upper" {% if policy.upper %}checked{% endif %}> Require Uppercase</label>
+                        <label><input type="checkbox" name="policy_lower" {% if policy.lower %}checked{% endif %}> Require Lowercase</label>
+                        <label><input type="checkbox" name="policy_digits" {% if policy.digits %}checked{% endif %}> Require Digits</label>
+                        <label><input type="checkbox" name="policy_special" {% if policy.special %}checked{% endif %}> Require Special</label>
+                        <label><input type="checkbox" name="policy_exclude_similar" {% if policy.exclude_similar %}checked{% endif %}> Exclude Similar (l/I/1/O/0)</label>
+                    </div>
+                    <button class="btn" type="submit" name="set_policy">Save Policy</button>
+                    <span style="color:#888; font-size:0.98em; margin-left:1em;">(Used for generation & analysis)</span>
+                </form>
+                {% if show_pronounceable %}
+                <div class="pronounceable">
+                    <strong>Pronounceable Password:</strong>
+                    <input type="text" id="pronounceable-password" value="{{ pronounceable }}" readonly>
+                    <button class="copy-btn" onclick="copyToClipboard('pronounceable-password')">Copy</button>
+                </div>
+                {% endif %}
+                <!-- Variations Section (UP) -->
+                {% if variations %}
+                <div class="variations">
+                    <strong>Variations of your password:</strong>
+                    {% for v in variations %}
+                    <div class="variation-item">
+                        <input type="text" id="variation-{{ loop.index }}" value="{{ v }}" readonly>
+                        <button class="copy-btn" onclick="copyToClipboard('variation-{{ loop.index }}')">Copy</button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <!-- Security Tips (UP) -->
+                <section style="margin-top:2em; background:#f8fbff; border-radius:8px; padding:1em 1em 0.5em 1em;">
+                    <h2 style="margin-top:0;">Password Security Tips</h2>
+                    <ul style="color:#0078d7; font-size:1.05em;">
+                        <li>Use a unique password for every account.</li>
+                        <li>Make passwords long (at least 12-16 characters).</li>
+                        <li>Include uppercase, lowercase, digits, and special characters.</li>
+                        <li>Avoid using personal information or common words.</li>
+                        <li>Change passwords regularly and don’t reuse old ones.</li>
+                        <li>Enable two-factor authentication (2FA) wherever possible.</li>
+                        <li>Never share your passwords with anyone.</li>
+                        <li>Consider using a reputable password manager.</li>
+                        <li>Be cautious of phishing attempts and suspicious links.</li>
+                    </ul>
+                    <div style="color:#888; font-size:0.98em; margin-top:0.5em;">For more, see <a href="https://www.ncsc.gov.uk/collection/passwords" target="_blank" style="color:#0078d7; text-decoration:underline;">NCSC Password Guidance</a> or <a href="https://owasp.org/www-community/password-special-characters" target="_blank" style="color:#0078d7; text-decoration:underline;">OWASP Passwords</a>.</div>
+                </section>
             </div>
-            <button class="btn" type="submit" name="set_policy">Save Policy</button>
-            <span style="color:#888; font-size:0.98em; margin-left:1em;">(Used for generation & analysis)</span>
-        </form>
-        <form method="POST">
-            <h2>Generate a Password</h2>
-            <label>Length:
-                <input type="number" name="length" min="8" max="64" value="16">
-            </label>
-            <div class="options">
-                <label><input type="checkbox" name="upper" checked> Uppercase</label>
-                <label><input type="checkbox" name="lower" checked> Lowercase</label>
-                <label><input type="checkbox" name="digits" checked> Digits</label>
-                <label><input type="checkbox" name="special" checked> Special</label>
+            <div class="main-right">
+                <!-- Analyze/Modify Section -->
+                <form method="POST" style="margin-top:2em;">
+                    <h2>Analyze or Modify Your Password</h2>
+                    <label>Enter your password:
+                        <input type="text" name="custom_password" id="custom-password" value="{{ custom }}">
+                    </label>
+                    <button class="btn" type="submit" name="analyze">Analyze</button>
+                    <div style="margin-top:0.5em; color:#888; font-size:0.98em;">
+                        <em>Scroll down for suggestions and analysis results.</em>
+                    </div>
+                </form>
+                {% if analysis %}
+                <div class="issues">
+                    <ul>
+                    {% for issue in analysis %}
+                        <li>{{ issue }}</li>
+                    {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                {% if suggestions %}
+                <div class="suggestions">
+                    <strong>Suggestions to enhance complexity:</strong>
+                    <ul>
+                    {% for s in suggestions %}
+                        <li>{{ s }}</li>
+                    {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                <!-- Entropy/Crack Time and Rotation (DOWN) -->
+                {% if entropy is not none and crack_time is not none %}
+                <div class="entropy-info" style="margin-top:0.7em; background:#e6f7ff; color:#0078d7; border-radius:6px; padding:0.7em 1em;">
+                    <strong>Estimated Entropy:</strong> {{ entropy }} bits<br>
+                    <strong>Estimated Crack Time (offline, 10<sup>10</sup> guesses/sec):</strong>
+                    {% if crack_time < 60 %}
+                        {{ crack_time|round(2) }} seconds
+                    {% elif crack_time < 3600 %}
+                        {{ (crack_time/60)|round(2) }} minutes
+                    {% elif crack_time < 86400 %}
+                        {{ (crack_time/3600)|round(2) }} hours
+                    {% elif crack_time < 31536000 %}
+                        {{ (crack_time/86400)|round(2) }} days
+                    {% else %}
+                        {{ (crack_time/31536000)|round(2) }} years
+                    {% endif %}
+                </div>
+                {% endif %}
+                <div class="rotation-reminder" style="margin-top:1em; background:#fffbe6; color:#b38f00; border-radius:6px; padding:0.7em 1em;">
+                    <strong>Password Rotation Reminder:</strong><br>
+                    {% if last_generated and next_rotation %}
+                        Last generated: <b>{{ last_generated }}</b><br>
+                        Recommended to change after <b>{{ rotation_days }}</b> days: <b>{{ next_rotation }}</b><br>
+                        <span style="font-size:0.95em;">(Best practice: rotate passwords every {{ rotation_days }} days.)</span>
+                    {% else %}
+                        <span style="font-size:0.95em;">Best practice: rotate passwords every {{ rotation_days }} days.</span>
+                    {% endif %}
+                </div>
+                <!-- History (DOWN) -->
+                {% if history %}
+                <div class="history">
+                    <strong>Recent Passwords:</strong>
+                    <ul>
+                    {% for h in history %}
+                        <li><input type="text" value="{{ h }}" readonly style="width:80%;"> <button class="copy-btn" onclick="copyToClipboardFromValue(this)">Copy</button></li>
+                    {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                <div class="reflection">
+                    <em>Strong passwords are your first line of defense. Make them unique, long, and hard to guess!<br>
+                    <span style="color:#0078d7;">OpenPassGen is open source. <a href="https://github.com/Santoshn26/OpenPassGen" target="_blank" style="color:#0078d7; text-decoration:underline;">View on GitHub</a></span>
+                    <br><span style="color:#b38f00; font-size:0.98em;">Tip: Scroll down for suggestions and analysis results after using Analyze.</span></em>
+                </div>
             </div>
-            <label><input type="checkbox" name="shuffle"> Shuffle password</label>
-            <button class="btn" type="submit" name="generate">Generate</button>
-            <button class="btn" type="submit" name="pronounceable">Pronounceable</button>
-        </form>
-        {% if show_pronounceable %}
-        <div class="pronounceable">
-            <strong>Pronounceable Password:</strong>
-            <input type="text" id="pronounceable-password" value="{{ pronounceable }}" readonly>
-            <button class="copy-btn" onclick="copyToClipboard('pronounceable-password')">Copy</button>
         </div>
-        {% endif %}
-        <form method="POST" style="margin-top:2em;">
-            <h2>Analyze or Modify Your Password</h2>
-            <label>Enter your password:
-                <input type="text" name="custom_password" id="custom-password" value="{{ custom }}">
-            </label>
-            <button class="btn" type="submit" name="analyze">Analyze</button>
-            <div style="margin-top:0.5em; color:#888; font-size:0.98em;">
-                <em>Scroll down for suggestions and analysis results.</em>
-            </div>
-        </form>
-        {% if password %}
-        <div class="result">
-            <strong>Password:</strong>
-            <input type="{{ 'text' if show_password else 'password' }}" id="main-password" value="{{ password }}" readonly style="min-width:180px; max-width:100%; resize:horizontal;">
-            <button class="show-btn" type="button" onclick="togglePassword('main-password', this)"><span id="eye-icon">👁️</span></button>
-            <button class="copy-btn" onclick="copyToClipboard('main-password')">Copy</button>
-            <form method="POST" action="/download" style="display:inline;">
-                <input type="hidden" name="download_password" value="{{ password }}">
-                <button class="download-btn" type="submit">Download</button>
-            </form>
-        </div>
-        <div class="strength-meter">
-            <div class="strength-bar strength-{{ strength }}"></div>
-        </div>
-        <div class="strength-label">
-            {% if strength == 1 %}Very Weak{% elif strength == 2 %}Weak{% elif strength == 3 %}Moderate{% elif strength == 4 %}Strong{% elif strength == 5 %}Very Strong{% endif %}
-        </div>
-        {% if entropy is not none and crack_time is not none %}
-        <div class="entropy-info" style="margin-top:0.7em; background:#e6f7ff; color:#0078d7; border-radius:6px; padding:0.7em 1em;">
-            <strong>Estimated Entropy:</strong> {{ entropy }} bits<br>
-            <strong>Estimated Crack Time (offline, 10<sup>10</sup> guesses/sec):</strong>
-            {% if crack_time < 60 %}
-                {{ crack_time|round(2) }} seconds
-            {% elif crack_time < 3600 %}
-                {{ (crack_time/60)|round(2) }} minutes
-            {% elif crack_time < 86400 %}
-                {{ (crack_time/3600)|round(2) }} hours
-            {% elif crack_time < 31536000 %}
-                {{ (crack_time/86400)|round(2) }} days
-            {% else %}
-                {{ (crack_time/31536000)|round(2) }} years
-            {% endif %}
-        </div>
-        {% endif %}
-        <div class="rotation-reminder" style="margin-top:1em; background:#fffbe6; color:#b38f00; border-radius:6px; padding:0.7em 1em;">
-            <strong>Password Rotation Reminder:</strong><br>
-            {% if last_generated and next_rotation %}
-                Last generated: <b>{{ last_generated }}</b><br>
-                Recommended to change after <b>{{ rotation_days }}</b> days: <b>{{ next_rotation }}</b><br>
-                <span style="font-size:0.95em;">(Best practice: rotate passwords every {{ rotation_days }} days.)</span>
-            {% else %}
-                <span style="font-size:0.95em;">Best practice: rotate passwords every {{ rotation_days }} days.</span>
-            {% endif %}
-        </div>
-        {% endif %}
-        {% if analysis %}
-        <div class="issues">
-            <ul>
-            {% for issue in analysis %}
-                <li>{{ issue }}</li>
-            {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
-        {% if suggestions %}
-        <div class="suggestions">
-            <strong>Suggestions to enhance complexity:</strong>
-            <ul>
-            {% for s in suggestions %}
-                <li>{{ s }}</li>
-            {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
-        {% if variations %}
-        <div class="variations">
-            <strong>Variations of your password:</strong>
-            {% for v in variations %}
-            <div class="variation-item">
-                <input type="text" id="variation-{{ loop.index }}" value="{{ v }}" readonly>
-                <button class="copy-btn" onclick="copyToClipboard('variation-{{ loop.index }}')">Copy</button>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-        {% if history %}
-        <div class="history">
-            <strong>Recent Passwords:</strong>
-            <ul>
-            {% for h in history %}
-                <li><input type="text" value="{{ h }}" readonly style="width:80%;"> <button class="copy-btn" onclick="copyToClipboardFromValue(this)">Copy</button></li>
-            {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
-        <div class="reflection">
-            <em>Strong passwords are your first line of defense. Make them unique, long, and hard to guess!<br>
-            <span style="color:#0078d7;">OpenPassGen is open source. <a href="https://github.com/Santoshn26/OpenPassGen" target="_blank" style="color:#0078d7; text-decoration:underline;">View on GitHub</a></span>
-            <br><span style="color:#b38f00; font-size:0.98em;">Tip: Scroll down for suggestions and analysis results after using Analyze.</span></em>
-        </div>
-        <section style="margin-top:2em; background:#f8fbff; border-radius:8px; padding:1em 1em 0.5em 1em;">
-            <h2 style="margin-top:0;">Password Security Tips</h2>
-            <ul style="color:#0078d7; font-size:1.05em;">
-                <li>Use a unique password for every account.</li>
-                <li>Make passwords long (at least 12-16 characters).</li>
-                <li>Include uppercase, lowercase, digits, and special characters.</li>
-                <li>Avoid using personal information or common words.</li>
-                <li>Change passwords regularly and don’t reuse old ones.</li>
-                <li>Enable two-factor authentication (2FA) wherever possible.</li>
-                <li>Never share your passwords with anyone.</li>
-                <li>Consider using a reputable password manager.</li>
-                <li>Be cautious of phishing attempts and suspicious links.</li>
-            </ul>
-            <div style="color:#888; font-size:0.98em; margin-top:0.5em;">For more, see <a href="https://www.ncsc.gov.uk/collection/passwords" target="_blank" style="color:#0078d7; text-decoration:underline;">NCSC Password Guidance</a> or <a href="https://owasp.org/www-community/password-special-characters" target="_blank" style="color:#0078d7; text-decoration:underline;">OWASP Passwords</a>.</div>
-        </section>
+        <!-- END FLEX -->
     </div>
     <script>
         function copyToClipboard(elementId) {
