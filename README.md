@@ -31,7 +31,7 @@ OpenPassGen is a modern, open-source, privacy-first password generator and analy
 
 1. **Clone the repository:**
    ```sh
-   git clone https://github.com/yourusername/OpenPassGen.git
+   git clone https://github.com/Santoshn26/OpenPassGen.git
    cd OpenPassGen
    ```
 2. **Create a virtual environment (recommended):**
@@ -67,8 +67,10 @@ MIT License. See [LICENSE](LICENSE) for details.
 Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
 
 ## Author
-- [Your Name](https://github.com/yourusername)
+- [Santosh Nc](https://github.com/Santoshn26)
 
 ---
 
 **OpenPassGen** – Your open-source, privacy-first password generator and analyzer.
+
+[View on GitHub](https://github.com/Santoshn26/OpenPassGen)
