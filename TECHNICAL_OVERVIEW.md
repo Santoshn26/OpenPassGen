@@ -62,7 +62,7 @@ graph TD
     Gen[Password Generation]
     Analyze[Password Analysis]
     Variations[Password Variations]
-    History[Password History (Session)]
+    HistoryDB[Password History (Session)]
     UI[UI/Results]
 
     User -->|"Select options / Enter password"| Browser
@@ -71,11 +71,11 @@ graph TD
     Flask -->|"Generate Password"| Gen
     Flask -->|"Analyze Password"| Analyze
     Flask -->|"Create Variations"| Variations
-    Flask -->|"Update History"| History
+    Flask -->|"Update History"| HistoryDB
     Gen --> UI
     Analyze --> UI
     Variations --> UI
-    History --> UI
+    HistoryDB --> UI
     Policy --> UI
     Flask --> UI
     UI --> Browser
